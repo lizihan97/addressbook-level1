@@ -144,6 +144,9 @@ public class AddressBook {
     private static final int PERSON_DATA_INDEX_NAME = 0;
     private static final int PERSON_DATA_INDEX_PHONE = 1;
     private static final int PERSON_DATA_INDEX_EMAIL = 2;
+    
+    private static final int COMMAND_INDEX_TYPE = 0;
+    private static final int COMMAND_INDEX_ARGS = 1;
 
     /**
      * The number of data elements for a single person.
@@ -212,7 +215,6 @@ public class AddressBook {
         loadDataFromStorage();
         while (true) {
             String userCommand = getUserInput();
-            echoUserCommand(userCommand);
             String feedback = executeCommand(userCommand);
             showResultToUser(feedback);
         }
@@ -257,17 +259,17 @@ public class AddressBook {
      * @param args full program arguments passed to application main method
      */
     private static void processProgramArgs(String[] args) {
-        if (args.length >= 2) {
+        boolean isInvalidProgramArgs = args.length >= 2;
+        boolean isValidProgramArgs = args.length == 1;
+        boolean isDefaultProgramArgs = args.length == 0;
+        if (isInvalidProgramArgs) {
             showToUser(MESSAGE_INVALID_PROGRAM_ARGS);
             exitProgram();
-        }
-
-        if (args.length == 1) {
-            setupGivenFileForStorage(args[0]);
-        }
-
-        if(args.length == 0) {
-            setupDefaultFileForStorage();
+        } else if (isValidProgramArgs) {
+            String programArgs = args[0];
+            setupGivenFileForStorage(programArgs);
+        } else if(isDefaultProgramArgs) {
+             setupDefaultFileForStorage();
         }
     }
 
@@ -312,7 +314,8 @@ public class AddressBook {
      * and a valid file name as determined by {@link #hasValidFileName}.
      */
     private static boolean isValidFilePath(String filePath) {
-        if (filePath == null) {
+        boolean hasValidFilePath = filePath != null;
+        if (!hasValidFilePath) {
             return false;
         }
         Path filePathToValidate;
@@ -366,8 +369,8 @@ public class AddressBook {
      */
     private static String executeCommand(String userInputString) {
         final String[] commandTypeAndParams = splitCommandWordAndArgs(userInputString);
-        final String commandType = commandTypeAndParams[0];
-        final String commandArgs = commandTypeAndParams[1];
+        final String commandType = commandTypeAndParams[COMMAND_INDEX_TYPE];
+        final String commandArgs = commandTypeAndParams[COMMAND_INDEX_ARGS];
         switch (commandType) {
         case COMMAND_ADD_WORD:
             return executeAddPerson(commandArgs);
@@ -605,6 +608,7 @@ public class AddressBook {
         while (inputLine.trim().isEmpty() || inputLine.trim().charAt(0) == INPUT_COMMENT_MARKER) {
             inputLine = SCANNER.nextLine();
         }
+        echoUserCommand(inputLine);
         return inputLine;
     }
 
@@ -794,11 +798,11 @@ public class AddressBook {
      * @return true if the given person was found and deleted in the model
      */
     private static boolean deletePersonFromAddressBook(String[] exactPerson) {
-        final boolean changed = ALL_PERSONS.remove(exactPerson);
-        if (changed) {
+        final boolean isChanged = ALL_PERSONS.remove(exactPerson);
+        if (isChanged) {
             savePersonsToFile(getAllPersonsInAddressBook(), storageFilePath);
         }
-        return changed;
+        return isChanged;
     }
 
     /**
@@ -988,16 +992,14 @@ public class AddressBook {
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
 
         // phone is last arg, target is from prefix to end of string
+        String phoneAddedPrefix;
         if (indexOfPhonePrefix > indexOfEmailPrefix) {
-            return removePrefixSign(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
-                    PERSON_DATA_PREFIX_PHONE);
-
+            phoneAddedPrefix = encoded.substring(indexOfPhonePrefix, encoded.length()).trim();
         // phone is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
-                    encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
-                    PERSON_DATA_PREFIX_PHONE);
+            phoneAddedPrefix = encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim();
         }
+        return removePrefix(phoneAddedPrefix,PERSON_DATA_PREFIX_PHONE);
     }
 
     /**
@@ -1011,16 +1013,15 @@ public class AddressBook {
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
 
         // email is last arg, target is from prefix to end of string
+        String emailAddedPrefix;
         if (indexOfEmailPrefix > indexOfPhonePrefix) {
-            return removePrefixSign(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
-                    PERSON_DATA_PREFIX_EMAIL);
+            emailAddedPrefix = encoded.substring(indexOfEmailPrefix, encoded.length()).trim();
 
         // email is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
-                    encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
-                    PERSON_DATA_PREFIX_EMAIL);
+            emailAddedPrefix = encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim();
         }
+        return removePrefix(emailAddedPrefix, PERSON_DATA_PREFIX_EMAIL);
     }
 
     /**
@@ -1146,12 +1147,12 @@ public class AddressBook {
     /**
      * Removes sign(p/, d/, etc) from parameter string
      *
-     * @param s  Parameter as a string
-     * @param sign  Parameter sign to be removed
-     * @return  string without the sign
+     * @param fullString  Parameter as a string
+     * @param prefix  Parameter sign to be removed
+     * @return  string without the prefix
      */
-    private static String removePrefixSign(String s, String sign) {
-        return s.replace(sign, "");
+    private static String removePrefix(String fullString, String prefix) {
+        return fullString.replace(prefix, "");
     }
 
     /**
