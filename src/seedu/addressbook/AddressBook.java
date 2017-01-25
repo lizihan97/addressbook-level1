@@ -996,16 +996,14 @@ public class AddressBook {
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
 
         // phone is last arg, target is from prefix to end of string
+        String phoneAddedPrefix;
         if (indexOfPhonePrefix > indexOfEmailPrefix) {
-            return removePrefixSign(encoded.substring(indexOfPhonePrefix, encoded.length()).trim(),
-                    PERSON_DATA_PREFIX_PHONE);
-
+            phoneAddedPrefix = encoded.substring(indexOfPhonePrefix, encoded.length()).trim();
         // phone is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
-                    encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim(),
-                    PERSON_DATA_PREFIX_PHONE);
+            phoneAddedPrefix = encoded.substring(indexOfPhonePrefix, indexOfEmailPrefix).trim();
         }
+        return removePrefix(phoneAddedPrefix,PERSON_DATA_PREFIX_PHONE);
     }
 
     /**
@@ -1019,16 +1017,15 @@ public class AddressBook {
         final int indexOfEmailPrefix = encoded.indexOf(PERSON_DATA_PREFIX_EMAIL);
 
         // email is last arg, target is from prefix to end of string
+        String emailAddedPrefix;
         if (indexOfEmailPrefix > indexOfPhonePrefix) {
-            return removePrefixSign(encoded.substring(indexOfEmailPrefix, encoded.length()).trim(),
-                    PERSON_DATA_PREFIX_EMAIL);
+            emailAddedPrefix = encoded.substring(indexOfEmailPrefix, encoded.length()).trim();
 
         // email is middle arg, target is from own prefix to next prefix
         } else {
-            return removePrefixSign(
-                    encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim(),
-                    PERSON_DATA_PREFIX_EMAIL);
+            emailAddedPrefix = encoded.substring(indexOfEmailPrefix, indexOfPhonePrefix).trim();
         }
+        return removePrefix(emailAddedPrefix, PERSON_DATA_PREFIX_EMAIL);
     }
 
     /**
@@ -1154,12 +1151,12 @@ public class AddressBook {
     /**
      * Removes sign(p/, d/, etc) from parameter string
      *
-     * @param s  Parameter as a string
-     * @param sign  Parameter sign to be removed
-     * @return  string without the sign
+     * @param fullString  Parameter as a string
+     * @param prefix  Parameter sign to be removed
+     * @return  string without the prefix
      */
-    private static String removePrefixSign(String s, String sign) {
-        return s.replace(sign, "");
+    private static String removePrefix(String fullString, String prefix) {
+        return fullString.replace(prefix, "");
     }
 
     /**
