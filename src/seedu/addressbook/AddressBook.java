@@ -145,6 +145,15 @@ public class AddressBook {
      * If the first non-whitespace character in a user's input line is this, that line will be ignored.
      */
     private static final char INPUT_COMMENT_MARKER = '#';
+    
+    /* We use a String array to store command type and args.
+     * The constants given below are the indexes for the different data elements of a command
+     * used by the internal String[] storage format.
+     * For example, the type of the command is stored as the 0th element in the array.
+     */
+    private static final int COMMAND_ARGS_INDEX = 1;
+
+    private static final int COMMAND_TYPE_INDEX = 0;
 
     /*
      * This variable is declared for the whole class (instead of declaring it
@@ -356,8 +365,8 @@ public class AddressBook {
      */
     private static String executeCommand(String userInputString) {
         final String[] commandTypeAndParams = splitCommandWordAndArgs(userInputString);
-        final String commandType = commandTypeAndParams[0];
-        final String commandArgs = commandTypeAndParams[1];
+        final String commandType = commandTypeAndParams[COMMAND_TYPE_INDEX];
+        final String commandArgs = commandTypeAndParams[COMMAND_ARGS_INDEX];
         switch (commandType) {
         case COMMAND_ADD_WORD:
             return executeAddPerson(commandArgs);
